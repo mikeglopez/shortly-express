@@ -21,9 +21,7 @@ class Users extends Model {
    */
   compare(attempted, password, salt) {
     var hashedpassword = utils.createHash(attempted, salt);
-    console.log('Hashed password:', hashedpassword);
     var compareHashResult = utils.compareHash(attempted, password, salt);
-    console.log('compareHashResult:', compareHashResult);
     return compareHashResult;
   }
 
@@ -45,9 +43,6 @@ class Users extends Model {
       salt,
       password: utils.createHash(password, salt)
     };
-
-    console.log("Going to create new user with:", newUser);
-
     return super.create.call(this, newUser);
   }
 }

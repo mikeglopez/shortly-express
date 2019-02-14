@@ -100,21 +100,13 @@ app.post('/login',
     models.Users.get({ username })
       .then(result => {
         if (result === undefined) {
-          console.log('Invalid username or password');
-          res.status(200).send({ message: 'Invalid username or password' });
-          // models.Users.create({ username, password });
-          // res.redirect('/');
+          res.redirect('/login');
         } else {
-          console.log('attempted password======>', attempted);
-          console.log('stored password======>', result.password);
-          console.log('stored salt=========>', result.salt);
           var found = models.Users.compare(attempted,result.password, result.salt );
-          console.log('Found is:', found);
           if (found) {
             res.redirect('/');
           } else {
-            console.log('Password did not match');
-            res.status(200).send({ message: 'Invalid username or password' });
+            res.redirect('/login');
           }
 
         }
