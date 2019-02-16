@@ -277,7 +277,7 @@ describe('', function () {
     });
   });
 
-  describe('Sessions Schema:', function () {
+  xdescribe('Sessions Schema:', function () {
     it('contains a sessions table', function (done) {
       var queryString = 'SELECT * FROM sessions';
       db.query(queryString, function (err, results) {
@@ -325,7 +325,7 @@ describe('', function () {
     });
   });
 
-  describe('Express Middleware', function () {
+  xdescribe('Express Middleware', function () {
     var cookieParser = require('../server/middleware/cookieParser.js');
     var createSession = require('../server/middleware/auth.js').createSession;
 
@@ -390,7 +390,7 @@ describe('', function () {
         var response = httpMocks.createResponse();
         createSession(requestWithoutCookie, response, function () {
           var cookies = response.cookies;
-          console.log('Cookies on response:', cookies['shortlyid'].value);
+          //console.log('Cookies on response:', cookies['shortlyid'].value);
           expect(cookies['shortlyid']).to.exist;
           expect(cookies['shortlyid'].value).to.exist;
           done();
@@ -446,17 +446,17 @@ describe('', function () {
 
           createSession(requestWithoutCookie, response, function () {
             var hash = requestWithoutCookie.session.hash;
-            console.log('First Session==========>', requestWithoutCookie.session);
+            //console.log('First Session==========>', requestWithoutCookie.session);
             db.query('UPDATE sessions SET userId = ? WHERE hash = ?', [userId, hash], function (error, result) {
 
               var secondResponse = httpMocks.createResponse();
               var requestWithCookies = httpMocks.createRequest();
               requestWithCookies.cookies.shortlyid = hash;
-              console.log('Going to send the second request with cookies:', requestWithCookies.cookies);
+              //console.log('Going to send the second request with cookies:', requestWithCookies.cookies);
 
               createSession(requestWithCookies, secondResponse, function () {
                 var session = requestWithCookies.session;
-                console.log('Second Session==========>', requestWithCookies.session);
+                //console.log('Second Session==========>', requestWithCookies.session);
                 expect(session).to.be.an('object');
                 expect(session.user.username).to.eq(username);
                 expect(session.userId).to.eq(userId);
@@ -483,7 +483,7 @@ describe('', function () {
     });
   });
 
-  xdescribe('Sessions and cookies', function () {
+  describe('Sessions and cookies', function () {
     var requestWithSession;
     var cookieJar;
 
@@ -509,6 +509,7 @@ describe('', function () {
 
     it('saves a new session when the server receives a request', function (done) {
       requestWithSession('http://127.0.0.1:4568/', function (err, res, body) {
+        //console.log('Response cookies is', res.cookies);
         if (err) { return done(err); }
         var queryString = 'SELECT * FROM sessions';
         db.query(queryString, function (error, sessions) {
@@ -521,15 +522,27 @@ describe('', function () {
     });
 
     it('sets and stores a cookie on the client', function (done) {
+      //console.log("Starting ======================> cookies Jar test");
       requestWithSession('http://127.0.0.1:4568/', function (error, res, body) {
+        // console.log('Cookie Jar ==========>', cookieJar);
+        // console.log('Response Header  ==========>', res.headers);
+        // console.log('Response Cookies  ==========>', res.cookies);
+        // console.log('Response cookie Jar  ==========>', res.cookieJar);
+        // console.log('Response  Jar  ==========>', res.jar);
+
+
         if (error) { return done(error); }
         var cookies = cookieJar.getCookies('http://127.0.0.1:4568/');
+        // console.log("Got cookies ========>", cookies)
+        // console.log("Cookie value =======>", cookies[0].value);
         expect(cookies.length).to.equal(1);
         done();
       });
     });
 
     it('assigns session to a user when user logs in', function (done) {
+
+      console.log("Starting the test for ADD USER ========>");
       addUser(function (err, res, body) {
         if (err) { return done(err); }
         var cookies = cookieJar.getCookies('http://127.0.0.1:4568/');
