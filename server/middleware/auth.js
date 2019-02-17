@@ -3,13 +3,16 @@ const Promise = require("bluebird");
 var cookieParser = require("./cookieParser.js");
 
 module.exports.createSession = (req, res, next) => {
+  // console.log("Starting new Session with req======>", req.headers);
   // No Cookies
-  //console.log("Request headers:", req.headers);
   if (!req.cookies || !req.cookies.shortlyid) {
-    //console.log("Received request without cookie==============>", req.cookies);
+    // console.log("=========No Cookie======. Creating New session for Req:", req.headers);
     models.Sessions.create().then(record => {
       models.Sessions.get({ id: record.insertId }).then(session => {
+
         let hashValue = session.hash;
+
+        // console.log("=========Added session ======. HashValue:", hashValue);
         req.session = {
           hash: hashValue
         };
@@ -21,18 +24,17 @@ module.exports.createSession = (req, res, next) => {
     });
   } else {
     // With Cookies
+    // console.log("=========Got Cookies======. Setting User for Req:", req.headers);
+
     let hashValue = req.cookies.shortlyid;
-    //console.log('Received request with cookie and Hash==============>', hashValue);
+    // console.log("=========Got Cookies======. Cookie:", hashValue);
     models.Sessions.get({ hash: hashValue }).then(session => {
-      //console.log('Found session for the cookie===========>', session);
       // User ID exists
       if (!session) {
         res.cookies = { shortlyid: {} };
-        //res.cookie( 'shortlyid' , { } );
         next();
       } else if (session.userId !== null) {
         models.Users.get({ id: session.userId }).then(user => {
-          //console.log('Found User');
           req.session = {
             hash: hashValue,
             userId: session.userId,
@@ -42,7 +44,6 @@ module.exports.createSession = (req, res, next) => {
             }
           };
           res.cookies = { shortlyid: { value: hashValue } };
-          //res.cookie( 'shortlyid' , { value: hashValue } );
           next();
         });
       } else {
@@ -51,7 +52,6 @@ module.exports.createSession = (req, res, next) => {
           hash: hashValue
         };
         res.cookies = { shortlyid: { value: hashValue } };
-        //res.cookie( 'shortlyid' , { value: hashValue } );
         next();
       }
     });
@@ -64,12 +64,22 @@ module.exports.createSession = (req, res, next) => {
 
 module.exports.updateSession = (req, res, userId, next) => {
   let sessionId = null;
-  console.log("Updating session for user:", userId);
-  console.log("Request cookies:", req.cookies);
-  if (req.cookies && req.cookies.shortlyid) {
-    sessionId = req.cookies.shortlyid;
-    console.log("Updating session for HASH:", sessionId);
+  if (req.session) {
+    sessionId = req.session.hash;
     models.Sessions.update({ hash: sessionId }, { userId: userId }).then(() =>
+      next()
+    );
+  } else {
+    next();
+  }
+};
+
+module.exports.deleteSession = (req, res, next) => {
+  let cookieValue = "shortlyid=''" ;
+  res.setHeader("Set-Cookie", [cookieValue]);
+  if (req.session) {
+    sessionId = req.session.hash;
+    models.Sessions.delete({ hash: sessionId }).then(() =>
       next()
     );
   } else {
